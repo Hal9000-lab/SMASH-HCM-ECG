@@ -1,2 +1,3 @@
 # SMASH-HCM-ECG
-Source code
+
+Code and analysis workflows associated with the SMASH-HCM ECG phenotyping study.
