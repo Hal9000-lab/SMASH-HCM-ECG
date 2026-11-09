@@ -144,5 +144,5 @@ arguments (`--help`).
 
 ## Funding
 
-This work was carried out within the SMASH-HCM project, funded by the European Union.
+This work was carried out within the SMASH-HCM project, funded by the European Union under grant agreement No. 101137115.
 <!-- TODO: grant agreement number -->
