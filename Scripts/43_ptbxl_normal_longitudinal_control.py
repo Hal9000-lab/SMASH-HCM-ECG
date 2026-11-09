@@ -24,7 +24,10 @@ Data/ptbxl_database.csv (optional)         PhysioNet metadata: dates, ages, code
                                            and further normal repeats
 Data/PTBXL_Normal/records500/...            waveforms (WFDB, 500 Hz)
 
-An ECG from ptbxl_database.csv counts as normal only if its SCP codes are NORM
+By default only manifest ECGs are used, so the eligibility criteria match the
+Normal-reference cohort (the manifest holds all eligible ECGs, including repeats);
+ptbxl_database.csv supplies dates and ages. With --include-database-repeats, an
+ECG from ptbxl_database.csv is added only if its SCP codes are NORM
 (likelihood 100) with at most SR. Records that are needed but not on disk are
 listed in ptbxl_repeat_download_manifest.csv, in the format of Step 00:
     python Scripts\\00_download_ptbxl_normal_reference.py --manifest <that file>
@@ -112,6 +115,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--step33", type=Path, default=s / "33_project_mimic_frozen_dual_manifold.py")
     p.add_argument("--step37", type=Path, default=s / "37_z06_age_sensitivity.py")
     p.add_argument("--step38", type=Path, default=s / "38_z06_piecewise_trajectory.py")
+    p.add_argument("--include-database-repeats", action="store_true",
+                   help="Also add NORM ECGs from ptbxl_database.csv that are not in the manifest (different criteria).")
     p.add_argument("--results-dir", type=Path, default=r / "43_PTBXL_Normal_Longitudinal_Control")
     p.add_argument("--batch-size", type=int, default=128)
     p.add_argument("--device", choices=["auto", "cpu", "cuda"], default="auto")
@@ -147,7 +152,7 @@ def record_path(waveform_root: Path, filename_hr: str) -> Path:
     return waveform_root / f"{rel}.hea"
 
 
-def build_inventory(manifest: pd.DataFrame, database: pd.DataFrame | None, waveform_root: Path) -> pd.DataFrame:
+def build_inventory(manifest: pd.DataFrame, database: pd.DataFrame | None, waveform_root: Path, add_repeats: bool = False) -> pd.DataFrame:
     m = manifest.copy()
     m["ecg_id"] = pd.to_numeric(m["ecg_id"], errors="coerce").astype("Int64")
     m["source"] = "manifest"
@@ -159,7 +164,7 @@ def build_inventory(manifest: pd.DataFrame, database: pd.DataFrame | None, wavef
         for c in fill:
             from_db = m["ecg_id"].map(lookup[c])
             m[c] = from_db if c not in m else m[c].where(m[c].notna(), from_db)
-        extra = db[db["scp_codes"].map(is_strict_normal) & ~db["ecg_id"].isin(m["ecg_id"])].copy()
+        extra = db.iloc[0:0] if not add_repeats else db[db["scp_codes"].map(is_strict_normal) & ~db["ecg_id"].isin(m["ecg_id"])].copy()
         extra["source"] = "ptbxl_database"
         m = pd.concat([m, extra[[c for c in m.columns if c in extra.columns]]], ignore_index=True)
     missing = {"recording_date", "patient_id", "filename_hr"} - set(m.columns)
@@ -429,7 +434,7 @@ def main() -> None:
     database = pd.read_csv(args.ptbxl_database) if args.ptbxl_database.is_file() else None
     if database is None:
         print(f"  {args.ptbxl_database.name} not found: only manifest records are used.")
-    inv = build_inventory(manifest, database, args.waveform_root)
+    inv = build_inventory(manifest, database, args.waveform_root, args.include_database_repeats)
     inv.drop(columns=["hea_path"]).to_csv(out / "ptbxl_repeat_inventory.csv", index=False)
     dl = download_manifest(inv)
     if len(dl):
