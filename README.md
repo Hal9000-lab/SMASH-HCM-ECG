@@ -5,7 +5,7 @@ Analysis code for the study
 > **Interpretable ECG manifolds link longitudinal electrical phenotypes to heart-failure risk in hypertrophic cardiomyopathy**
 > <!-- TODO: authors, preprint DOI / journal reference -->
 
-developed at Politecnico di Milano within the EU-funded **SMASH-HCM** project.
+developed at Politecnico di Milano and Università di Pavia within the EU-funded **SMASH-HCM** project.
 
 ---
 
