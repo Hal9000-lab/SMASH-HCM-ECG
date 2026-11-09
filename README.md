@@ -13,7 +13,7 @@ developed at Politecnico di Milano (Milan, Italy) and Università di Pavia (Pavi
 
 Hypertrophic cardiomyopathy (HCM) produces heterogeneous electrical phenotypes whose continuous
 organization, longitudinal evolution and clinical relevance are poorly defined. This repository
-implements an **ECG-first, unsupervised latent-manifold framework** built on 12-lead median beats.
+implements an **ECG-first, unsupervised latent-manifold framework**, based on β-Variational Autoencoders, built on 12-lead median beats.
 
 | Component | Role |
 |---|---|
